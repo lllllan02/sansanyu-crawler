@@ -7,6 +7,11 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+type Exam struct {
+	Title    string
+	Problems []*Problem
+}
+
 type Problem struct {
 	Type     string
 	Content  string
@@ -15,17 +20,17 @@ type Problem struct {
 	Analysis string
 }
 
-func (client *Client) GetExam(url string) (string, []*Problem, error) {
+func (client *Client) GetExam(url string) (*Exam, error) {
 	// 获取试卷详情
 	body, err := client.Get(url)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	// 解析 html
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(body))
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	title := strings.TrimSpace(doc.Find(".p-10").Text())
@@ -64,7 +69,10 @@ func (client *Client) GetExam(url string) (string, []*Problem, error) {
 		problems = append(problems, problem)
 	})
 
-	return title, problems, nil
+	return &Exam{
+		Title:    title,
+		Problems: problems,
+	}, nil
 }
 
 func parseTitle(html string) string {
